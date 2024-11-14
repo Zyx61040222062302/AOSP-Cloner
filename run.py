@@ -1,6 +1,14 @@
 from os import chdir, system
 from glob import glob
 
+class Path:
+    def __init__(self, path: str):
+        try:
+            chdir(path)
+        except:
+            raise
+        else:
+            self.path = path
 
 def get_std_path(args: str):
     if "\\" in args:
@@ -75,21 +83,48 @@ def check_pack(args: str):
     else:
         print(error_list)
         return 1
-def to_cmd(args: str):
+def tree_path_to_cmd(args: str, second: int = 2):
     cmd = ""
     list1 = get_tree_path(args)
     for i in list1:
         i = i.replace("/", "\\")
         cmd += f"cd /d{i}\n"
         cmd += "git fetch\n"
-        cmd += "TIMEOUT /T 2 /NOBREAK\n"
+        cmd += f"TIMEOUT /T {second} /NOBREAK\n"
     file = open("c:/run.bat", "w+")
     file.write(cmd)
     file.close()
     print("写入完毕，按回车键退出。")
+def fetch_128_error_repo(args: str,
+                         http_proxy: str = None,
+                         https_proxy: str = None,
+                         second: int = 2):
+    cmd = ""
+    if http_proxy is not None:
+        cmd += f"set http_proxy=http://{http_proxy}\n"
+    if https_proxy is not None:
+        cmd += f"set https_proxy=http://{https_proxy}\n"
+    args = get_std_path(args)
+    file = open(f"{args}error.txt", "r")
+    a = file.read().split("\n")
+    file.close()
+    for i in a:
+        i1 = i.split("'")
+        i2 = i1[1]
+        i3 = i1[2]
+        if "exit status 128" in i3:
+            i4 = args + i2
+            i5 = i4.replace("/", "\\")
+            cmd += f"cd /d{i5}.git\n"
+            cmd += "git fetch\n"
+            cmd += f"TIMEOUT /T {second} /NOBREAK\n"
+    file = open("C:/run.bat", "w+")
+    file.write(cmd)
+    file.close()
+    print("写入完成。")
 
 
 
 
-to_cmd("g:/aosp")
+fetch_128_error_repo("H:\\chromium.googlesource.com\\chromiumos", https_proxy="127.0.0.1:7890")
 input()
